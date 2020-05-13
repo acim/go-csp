@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/acim/go-csp/pkg/seen"
 )
 
 type message struct {
@@ -14,30 +16,9 @@ type message struct {
 	timestamp int64
 }
 
-type seen map[int]bool
-
-func (s seen) init(n int) {
-	for i := 1; i <= n; i++ {
-		s[i] = false
-	}
-}
-
-func (s seen) set(n int) {
-	s[n] = true
-}
-
-func (s seen) allSet() bool {
-	for _, v := range s {
-		if !v {
-			return false
-		}
-	}
-	return true
-}
-
 func sender(id int, wg *sync.WaitGroup, ch chan<- message, quit <-chan struct{}) {
 	defer wg.Done()
-	fmt.Printf("Sender %d starting\n", id)
+	fmt.Printf("Sender %d started\n", id)
 	for {
 		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
 		select {
@@ -50,14 +31,13 @@ func sender(id int, wg *sync.WaitGroup, ch chan<- message, quit <-chan struct{})
 }
 
 func receiver(ns int, ch <-chan message, quit chan<- struct{}) {
-	fmt.Printf("Receiver starting\n")
-	s := seen(make(map[int]bool))
-	s.init(ns)
+	fmt.Printf("Receiver started\n")
+	s := seen.CreateMap(ns)
 	for {
 		m := <-ch
 		fmt.Printf("Received message from %d with timestamp %d\n", m.id, m.timestamp)
-		s.set(m.id)
-		if s.allSet() {
+		s.SetSeen(m.id)
+		if s.AllSeen() {
 			close(quit)
 			fmt.Printf("Receiver done\n")
 			return
