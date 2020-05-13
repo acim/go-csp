@@ -91,4 +91,5 @@ func main() {
 	go receiver(ns, ch, quit)
 
 	wg.Wait()
+	close(ch)
 }
