@@ -20,12 +20,12 @@ func sender(id int, wg *sync.WaitGroup, ch chan<- message, quit <-chan struct{})
 	defer wg.Done()
 	fmt.Printf("Sender %d started\n", id)
 	for {
-		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
 		select {
-		case ch <- message{id, time.Now().Unix()}:
 		case <-quit:
 			fmt.Printf("Sender %d done\n", id)
 			return
+		case <-time.After(time.Duration(rand.Intn(10)) * time.Second):
+			ch <- message{id, time.Now().Unix()}
 		}
 	}
 }
