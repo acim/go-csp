@@ -43,7 +43,10 @@ func receiver(ns int, ch <-chan message, quit chan<- struct{}) {
 		}
 	}
 	for range ch {
-		m := <-ch
+		m, ok := <-ch
+		if !ok {
+			break
+		}
 		fmt.Printf("Received remaining message from %d with timestamp %d\n", m.id, m.timestamp)
 	}
 	fmt.Printf("Receiver done\n")
